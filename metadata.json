@@ -1,0 +1,5 @@
+{
+  "name": "Fantasy NBA Liga Contracts",
+  "description": "A dashboard to display and synchronize contract data from our fantasy NBA league Google Sheet.",
+  "requestFramePermissions": []
+}

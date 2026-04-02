@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Georgia", serif;
+  --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-[#E4E3E0] text-[#141414];
+  }
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap');
