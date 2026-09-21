@@ -26,6 +26,8 @@ export async function fetchSheet(sheetName: string): Promise<ParsedSheet> {
 
 function parseGenericSheet(table: SheetData): ParsedSheet {
   let headers = table.cols.map((col, i) => col.label || col.id || `Column ${i + 1}`);
+  // Spalten ohne Ueberschrift: die Sheet-API liefert dann nur den Spaltenbuchstaben als Namen
+  let unlabeled = new Set<string>(headers.filter((_, i) => !table.cols[i].label || !table.cols[i].label.trim()));
   let rowsData = table.rows;
 
   // If headers are just letters (A, B, C...) or generic, and the first row has values,
@@ -34,7 +36,10 @@ function parseGenericSheet(table: SheetData): ParsedSheet {
   if (isGenericHeader && rowsData.length > 0) {
     const firstRow = rowsData[0].c;
     if (firstRow && firstRow.some(cell => cell && cell.v !== null)) {
-      headers = firstRow.map((cell, i) => cell ? String(cell.v) : `Column ${i + 1}`);
+      headers = firstRow.map((cell, i) =>
+        cell && cell.v !== null && cell.v !== undefined && String(cell.v).trim() !== '' ? String(cell.v) : `Column ${i + 1}`
+      );
+      unlabeled = new Set(headers.filter(h => /^Column \d+$/.test(h)));
       rowsData = rowsData.slice(1);
     }
   }
@@ -58,5 +63,5 @@ function parseGenericSheet(table: SheetData): ParsedSheet {
     Object.values(row).some(cell => cell.v !== null && cell.v !== undefined && cell.v !== '')
   );
   
-  return { headers, rows: nonEmptyRows };
+  return { headers, rows: nonEmptyRows, unlabeled: Array.from(unlabeled) };
 }
