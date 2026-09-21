@@ -126,7 +126,7 @@ export default function App() {
 
   return (
     <ImageContext.Provider value={imageMaps}>
-      <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#141414] selection:text-[#E4E3E0]">
+      <div className="min-h-screen bg-paper text-ink font-sans selection:bg-ink selection:text-paper">
         <SideMenu
           open={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
@@ -139,7 +139,7 @@ export default function App() {
         />
 
         {/* Header */}
-        <header className="border-b border-[#141414] p-6 md:p-10 flex flex-col gap-8">
+        <header className="border-b border-line p-6 md:p-10 flex flex-col gap-8">
           <div className="flex justify-between items-center gap-6">
             <button
               onClick={() => {
@@ -150,19 +150,19 @@ export default function App() {
               className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
             >
               <TeamLogo name="AsturFantasy NBA" size="xs" noBackground />
-              <span className="text-[11px] font-mono uppercase tracking-widest opacity-50 italic">AsturFantasy NBA</span>
+              <span className="t-label">AsturFantasy NBA</span>
             </button>
 
             <div className="flex items-center gap-4">
               <button
                 onClick={loadData}
                 disabled={loading}
-                className="flex items-center gap-2 border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 border border-ink px-4 py-2 hover:bg-ink hover:text-paper transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-sm font-mono uppercase tracking-wider hidden sm:inline">Actualizar</span>
+                <span className="t-btn hidden sm:inline">Actualizar</span>
               </button>
-              <button onClick={() => setIsMenuOpen(true)} className="p-2 border border-[#141414] hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors">
+              <button onClick={() => setIsMenuOpen(true)} className="p-2 border border-ink hover:bg-ink hover:text-paper transition-colors">
                 <Menu className="w-5 h-5" />
               </button>
             </div>
@@ -170,7 +170,7 @@ export default function App() {
 
           <div className="flex items-center gap-6">
             {currentView === 'salarios' && isDetailView && <TeamLogo name={selectedTeam!} size="lg" />}
-            <h1 className="text-4xl md:text-6xl font-serif italic tracking-tight leading-none">
+            <h1 className="t-title">
               {title}
             </h1>
           </div>
@@ -182,16 +182,16 @@ export default function App() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="border border-[#141414] p-8 flex flex-col items-center text-center max-w-2xl mx-auto"
+              className="border border-ink p-8 flex flex-col items-center text-center max-w-2xl mx-auto"
             >
-              <AlertCircle className="w-12 h-12 mb-4 text-red-600" />
-              <h2 className="text-2xl font-serif italic mb-2">Error al conectar con la hoja</h2>
+              <AlertCircle className="w-12 h-12 mb-4 text-bad" />
+              <h2 className="t-sec text-3xl mb-2">Error al conectar con la hoja</h2>
               <p className="opacity-70 mb-6">{error}</p>
             </motion.div>
           ) : loading && !salarios && !lottery && !draft2026 && !rondas ? (
             <div className="flex flex-col items-center justify-center py-20 opacity-30">
               <RefreshCw className="w-12 h-12 animate-spin mb-4" />
-              <p className="font-mono uppercase tracking-widest text-sm">Cargando datos...</p>
+              <p className="t-btn">Cargando datos...</p>
             </div>
           ) : (
             <>

@@ -40,6 +40,15 @@ Zusätzliche Tabs im Sheet (z. B. `archiv`) stören nicht: Die App liest nur die
 - Für die Cap zählt die Spalte `Salario` (inklusive `Extra`, den Zusatzkosten der besten Spieler des Vorjahres, nur für die laufende Saison).
 - Die Jahres-Spalten enthalten den Vertrag des Spielers und werden für die Cap nicht verwendet.
 
+## Look ändern (Schrift und Farben)
+
+Der Look wird mit zwei Wörtern am `<html>`-Tag in `index.html` gewählt, aktuell `data-type="a" data-palette="2"`:
+
+- `data-type`: `a` = Marcador (sportlich, Barlow Condensed), `b` = Sereno (ruhig, Manrope), `c` = Redacción (redaktionell, Fraunces + Inter)
+- `data-palette`: `1` = Cemento (Grau), `2` = Cantábrico (Meer), `3` = Parqué (Hallenboden), `4` = Noche de mercado (dunkel)
+
+Beim Wechsel von `data-type` muss in `index.html` auch die passende Schrift-Zeile einkommentiert werden (die alte auskommentieren). Die Werte aller Farben und Schriften stehen an einer Stelle: `src/index.css`. In den Komponenten gibt es keine festen Farben mehr, nur Namen wie `bg-paper`, `text-ink`, `text-bad` und Schrift-Rollen wie `t-title`, `t-team`, `t-btn`.
+
 ## Ansichten
 
 - **Salarios Equipos:** Übersicht aller Teams. Die Spalte `LIBRE` aus dem Sheet wird farbig dargestellt (rot = über dem Tope) und bekommt einen Auslastungsbalken. Gibt es keine `LIBRE`-Spalte, berechnet die App „Cap libre“ selbst (Tope Salarial minus Gastado). Die Spaltenköpfe sind anklickbar zum Sortieren. Klick auf ein Team öffnet die Plantilla, oben mit Gastado / Tope / Libre.
@@ -49,6 +58,7 @@ Zusätzliche Tabs im Sheet (z. B. `archiv`) stören nicht: Die App liest nur die
 
 ## Projektstruktur
 
+- `src/index.css`: Farben, Schriften und Schrift-Rollen (Look)
 - `src/config.ts`: Sheet-ID, Tab-Namen und Draft-Jahr
 - `src/App.tsx`: Daten laden, Header und Navigation
 - `src/components/MainTable.tsx`: Tabelle für Salarios Equipos und Teamansicht

@@ -51,12 +51,12 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
   }, [equipos]);
 
   if (!equipos) {
-    return <div className="p-10 text-center opacity-50 font-serif italic">No se encontraron datos.</div>;
+    return <div className="p-10 text-center opacity-50">No se encontraron datos.</div>;
   }
 
   if (groups.length === 0) {
     return (
-      <div className="p-10 text-center opacity-50 font-serif italic">
+      <div className="p-10 text-center opacity-50">
         Todavía no hay jugadores con "Derechos".
       </div>
     );
@@ -75,8 +75,8 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setTeamFilter(null)}
-          className={`px-3 py-1.5 border border-[#141414] font-mono text-[11px] uppercase tracking-widest transition-colors ${
-            teamFilter === null ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'
+          className={`px-3 py-1.5 border border-ink tabular-nums text-[11px] uppercase tracking-widest transition-colors ${
+            teamFilter === null ? 'bg-ink text-paper' : 'hover:bg-ink/10'
           }`}
         >
           Todos ({groups.reduce((sum, g) => sum + g.players.length, 0)})
@@ -85,8 +85,8 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
           <button
             key={g.team}
             onClick={() => setTeamFilter(teamFilter === g.team ? null : g.team)}
-            className={`px-3 py-1.5 border border-[#141414] font-mono text-[11px] uppercase tracking-widest transition-colors flex items-center gap-2 ${
-              teamFilter === g.team ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'
+            className={`px-3 py-1.5 border border-ink tabular-nums text-[11px] uppercase tracking-widest transition-colors flex items-center gap-2 ${
+              teamFilter === g.team ? 'bg-ink text-paper' : 'hover:bg-ink/10'
             }`}
           >
             {g.team} ({g.players.length})
@@ -94,24 +94,24 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs uppercase tracking-widest opacity-70">
+      <div className="flex flex-wrap gap-x-8 gap-y-2 t-label">
         <span>{totalPlayers} jugadores</span>
         <span>Salario que se libera: {formatNumber(totalSalary)}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {visible.map(group => (
-          <div key={group.team} className="border border-[#141414] bg-white/30">
+          <div key={group.team} className="border border-line bg-surface/50">
             <button
               onClick={() => onSelectTeam(group.team)}
               title="Ver plantilla"
-              className="w-full p-4 border-b border-[#141414] bg-[#141414]/5 flex justify-between items-center gap-4 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors text-left"
+              className="w-full p-4 border-b border-line bg-ink/5 flex justify-between items-center gap-4 hover:bg-ink hover:text-paper transition-colors text-left"
             >
               <span className="flex items-center gap-3 min-w-0">
                 <TeamLogo name={group.team} size="sm" />
-                <span className="font-serif italic text-lg truncate">{group.team}</span>
+                <span className="t-team text-lg truncate">{group.team}</span>
               </span>
-              <span className="font-mono text-xs uppercase tracking-widest opacity-60 shrink-0">
+              <span className="t-label shrink-0">
                 {group.players.length} · {formatNumber(group.total)}
               </span>
             </button>
@@ -119,18 +119,18 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
               {group.players.map((p, i) => {
                 const style = getContractStyle(p.contract);
                 return (
-                  <div key={i} className="p-3 border-b border-[#141414]/10 last:border-b-0 flex items-center justify-between gap-3">
+                  <div key={i} className="p-3 border-b border-line last:border-b-0 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <PlayerImage name={p.name} size="sm" />
                       <span className="text-sm font-medium truncate">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {style && (
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider border ${style}`}>
+                        <span className={`px-2 py-0.5 pill text-[11px] font-semibold uppercase tracking-wide border ${style}`}>
                           {p.contract}
                         </span>
                       )}
-                      <span className="font-mono text-sm">{formatNumber(p.salary)}</span>
+                      <span className="tabular-nums text-sm">{formatNumber(p.salary)}</span>
                     </div>
                   </div>
                 );

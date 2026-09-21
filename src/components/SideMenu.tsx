@@ -41,7 +41,7 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
     });
 
     if (results.length === 0) {
-      return <div className="text-sm opacity-50 italic text-center py-4">No se encontraron jugadores.</div>;
+      return <div className="text-sm opacity-50 text-center py-4">No se encontraron jugadores.</div>;
     }
 
     return results.map((row, i) => {
@@ -53,7 +53,7 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
       return (
         <div
           key={i}
-          className="border border-[#141414] p-3 flex items-center gap-3 bg-white/50 cursor-pointer hover:bg-[#141414]/5 transition-colors"
+          className="border border-line p-3 flex items-center gap-3 bg-surface/70 cursor-pointer hover:bg-ink/5 transition-colors"
           onClick={() => onSelectTeam(teamName)}
         >
           <PlayerImage name={playerName} size="md" />
@@ -64,7 +64,7 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
               <span className="text-xs opacity-70 truncate">{teamName}</span>
             </div>
             {contractStyle && (
-              <span className={`mt-2 self-start px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider border ${contractStyle}`}>
+              <span className={`mt-2 self-start px-2 py-0.5 pill text-[11px] font-semibold uppercase tracking-wide border ${contractStyle}`}>
                 {contract}
               </span>
             )}
@@ -80,16 +80,16 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
         <>
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#141414]/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-ink/20 backdrop-blur-sm z-40"
             onClick={onClose}
           />
           <motion.div
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-            className="fixed top-0 right-0 bottom-0 w-80 bg-[#E4E3E0] border-l border-[#141414] z-50 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-80 bg-paper border-l border-line z-50 flex flex-col"
           >
-            <div className="p-6 border-b border-[#141414] flex justify-between items-center">
-              <span className="font-serif italic text-xl">Menú</span>
+            <div className="p-6 border-b border-line flex justify-between items-center">
+              <span className="t-team text-xl">Menú</span>
               <button onClick={onClose} className="hover:opacity-70"><X className="w-6 h-6" /></button>
             </div>
             <div className="p-6 flex flex-col gap-6 flex-grow overflow-hidden">
@@ -100,7 +100,7 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
                   placeholder="Buscar jugador..."
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-transparent border border-[#141414] py-2 pl-10 pr-4 focus:outline-none focus:bg-[#141414] focus:text-[#E4E3E0] transition-colors placeholder:text-[#141414]/30"
+                  className="w-full bg-transparent border border-ink py-2 pl-10 pr-4 focus:outline-none focus:bg-ink focus:text-paper transition-colors placeholder:text-ink/30"
                 />
               </div>
               {searchTerm ? (
@@ -113,7 +113,7 @@ export function SideMenu({ open, onClose, currentView, onNavigate, searchTerm, o
                     <button
                       key={item.view}
                       onClick={() => onNavigate(item.view)}
-                      className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === item.view ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}
+                      className={`text-left px-4 py-3 t-btn border border-ink transition-colors ${currentView === item.view ? 'bg-ink text-paper' : 'hover:bg-ink/10'}`}
                     >
                       {item.label}
                     </button>

@@ -14,19 +14,19 @@ interface SheetTableProps {
 /** Einfache Tabelle fuer die Tabs Lottery, Draft und Rondas. */
 export function SheetTable({ sheet, emptyText, hideEmptyHeaders = false, highlightTradedPicks = false }: SheetTableProps) {
   if (!sheet) {
-    return <div className="p-10 text-center opacity-50 font-serif italic">{emptyText}</div>;
+    return <div className="p-10 text-center opacity-50">{emptyText}</div>;
   }
 
   const headers = hideEmptyHeaders ? sheet.headers.filter(h => h.trim() !== '' && !sheet.unlabeled.includes(h)) : sheet.headers;
   const teamCol = getTeamColumn(sheet.headers);
 
   return (
-    <div className="overflow-x-auto border border-[#141414]">
+    <div className="tbl">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-[#141414] bg-[#141414]/5">
+          <tr>
             {headers.map((header, i) => (
-              <th key={i} className="p-3 text-left font-mono uppercase tracking-wider text-[11px] opacity-70 whitespace-nowrap">
+              <th key={i} className="p-3 text-left t-th whitespace-nowrap">
                 {header}
               </th>
             ))}
@@ -36,7 +36,7 @@ export function SheetTable({ sheet, emptyText, hideEmptyHeaders = false, highlig
           {sheet.rows.map((row, rowIndex) => {
             const teamName = String(row[teamCol]?.v || '');
             return (
-              <tr key={rowIndex} className="border-b border-[#141414]/10 hover:bg-[#141414]/5 transition-colors">
+              <tr key={rowIndex} className="border-b border-line hover:bg-hover transition-colors">
                 {headers.map((header, colIndex) => {
                   const isTeamCol = header === teamCol;
                   const cellValue = displayValue(row[header]);
