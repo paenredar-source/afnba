@@ -27,6 +27,14 @@ Wichtig: Die Spaltennamen `Jugador`, `Equipo`, `Contrato`, `Salario`, `Imagen` s
 
 In `SALARIOS EQUIPOS` blendet die App die Spalten `Anual` und `Extra` sowie Spalten ohne Überschrift aus (siehe `getVisibleHeaders` in `src/utils/sheet.ts`). Die Position der Spalten ist egal, nur die Namen müssen stimmen.
 
+## Lottery- und Draft-Tab
+
+Diese beiden Tabs werden über ihre `gid` gefunden (in `src/config.ts` eingetragen), nicht über den Namen. Man kann sie im Sheet also jedes Jahr einfach umbenennen (z. B. `LOTTERY 2027`), ohne etwas im Code zu ändern. Die Titel in der App heißen bewusst nur „Lottery“ und „DRAFT“.
+
+Die `gid` ist die Zahl nach `gid=` in der Adresszeile, wenn der Tab im Sheet geöffnet ist. Sie ändert sich nur, wenn ein Tab **neu angelegt oder dupliziert** wird. Dann muss die neue `gid` in `src/config.ts` eingetragen werden.
+
+Zusätzliche Tabs im Sheet (z. B. `archiv`) stören nicht: Die App liest nur die Tabs aus `src/config.ts`. Der Dateiname der Tabelle spielt keine Rolle.
+
 ## Cap-Logik (Trade-Simulator)
 
 - Für die Cap zählt die Spalte `Salario` (inklusive `Extra`, den Zusatzkosten der besten Spieler des Vorjahres, nur für die laufende Saison).
@@ -41,6 +49,7 @@ In `SALARIOS EQUIPOS` blendet die App die Spalten `Anual` und `Extra` sowie Spal
 
 ## Projektstruktur
 
+- `src/config.ts`: Sheet-ID, Tab-Namen und Draft-Jahr
 - `src/App.tsx`: Daten laden, Header und Navigation
 - `src/components/MainTable.tsx`: Tabelle für Salarios Equipos und Teamansicht
 - `src/components/TradeMachine.tsx`: Trade-Simulator
