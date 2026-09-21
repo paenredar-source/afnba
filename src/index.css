@@ -110,8 +110,7 @@
   :root[data-type="a"] .stripe .name { padding-left: 6px; }
   .logo-slot { display: contents; }
   @media (max-width: 560px) {
-    /* Handy: Teamspalte schmal halten, damit "Libre" sofort sichtbar ist */
-    .tbl .logo-slot { display: none; }
-    .tbl .name { display: block; max-width: 38vw; white-space: normal; overflow-wrap: break-word; line-height: 1.15; }
+    /* Handy: Logo bleibt sichtbar, der Name darf umbrechen. So bleibt die erste Spalte schmal und "Libre" sofort sichtbar. */
+    .tbl .name { display: block; max-width: 30vw; white-space: normal; overflow-wrap: break-word; line-height: 1.15; }
   }
 }
