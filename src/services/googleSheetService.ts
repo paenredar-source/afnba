@@ -8,9 +8,9 @@ export async function fetchSheet(sheetName: string): Promise<ParsedSheet> {
     const response = await fetch(url);
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        throw new Error('The Google Sheet is not public. Please set "Anyone with the link can view" in the Share settings.');
+        throw new Error('La hoja de Google no es pública. Activa "Cualquier persona con el enlace puede ver" en la configuración de compartir.');
       }
-      throw new Error(`Failed to fetch sheet ${sheetName}: ${response.statusText}`);
+      throw new Error(`No se pudo cargar la hoja ${sheetName}: ${response.statusText}`);
     }
 
     const text = await response.text();

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { fetchSheet } from './services/googleSheetService';
 import { ParsedSheet } from './types';
+import { ImageContext, PlayerImage, TeamLogo } from './components/Images';
 import { 
   Search, 
   RefreshCw, 
@@ -36,6 +37,9 @@ export default function App() {
   const [tradeTeamB, setTradeTeamB] = useState<string | null>(null);
   const [selectedPlayersA, setSelectedPlayersA] = useState<string[]>([]);
   const [selectedPlayersB, setSelectedPlayersB] = useState<string[]>([]);
+
+  // Stabiler Wert fuer den ImageContext: Bilder werden nur neu geladen, wenn sich die Sheet-Daten aendern.
+  const imageMaps = useMemo(() => ({ teamLogos, playerImages }), [teamLogos, playerImages]);
 
   const loadData = async () => {
     setLoading(true);
@@ -159,7 +163,7 @@ export default function App() {
       setDraft2026(draft2026Data);
       setRondas(rondasData);
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message || 'Ha ocurrido un error inesperado');
     } finally {
       setLoading(false);
     }
@@ -237,17 +241,21 @@ export default function App() {
   const isDetailView = selectedTeam !== null;
 
   // Determine which headers to display
+  // Teamansicht: Alles ab der Spalte "Imagen" (bzw. "Foto") wird ausgeblendet. Die Position wird ueber den
+  // Spaltennamen gefunden, nicht ueber feste Nummern. Neue Spalten davor sind damit kein Problem.
+  const imageColIndex = currentSheet ? currentSheet.headers.findIndex(h => /imag|image|foto/i.test(h)) : -1;
+  const hideFromIndex = imageColIndex >= 0 ? imageColIndex : 13;
+
   const headersToDisplay = currentSheet ? currentSheet.headers.filter((header, i) => {
     const h = header.toLowerCase();
     if (!isDetailView) {
-      // Summary view: remove 6th and 7th columns (index 5 and 6) assuming they shifted
-      if (h.includes('bono')) return true;
-      return i !== 5 && i !== 6;
+      // Summary view: hide the "Anual" and "Extra" columns (by name, not by position)
+      const hn = h.trim();
+      return hn !== 'anual' && hn !== 'extra';
     } else {
-      // Detail view: remove "control", "anual", and "N" to "AF" (index 13 to 31)
-      if (h === 'control' || h === 'anual' || h.includes('image') || h.includes('foto')) return false;
-      // N is index 13, AF is index 31
-      if (i >= 13 && i <= 31) return false;
+      // Detail view: remove "control", "anual" and everything from the image column onwards
+      if (h === 'control' || h === 'anual') return false;
+      if (i >= hideFromIndex) return false;
       return true;
     }
   }) : [];
@@ -262,192 +270,6 @@ export default function App() {
       return cellVal && String(cellVal).toLowerCase() === selectedTeam.toLowerCase();
     });
   }
-
-  const getTeamLogo = (teamName: string | null) => {
-    if (!teamName) return null;
-    const normalizedName = teamName.trim().toLowerCase();
-    
-    // Special case for the Fantasy League logo
-    if (normalizedName === 'fantasy nba liga' || normalizedName === 'asturfantasy nba') {
-      return 'https://lh3.googleusercontent.com/d/1eBiYE1DEOIdUYZdLglN3PcTUeo_pUj86';
-    }
-    
-    // 1. Try exact match (case-insensitive)
-    const exactMatch = Object.keys(teamLogos).find(k => k.toLowerCase() === normalizedName);
-    let logo = exactMatch ? teamLogos[exactMatch] : null;
-    
-    // 2. Try partial match if no exact match
-    if (!logo) {
-      const partialMatch = Object.keys(teamLogos).find(k => 
-        normalizedName.includes(k.toLowerCase()) || k.toLowerCase().includes(normalizedName)
-      );
-      if (partialMatch) logo = teamLogos[partialMatch];
-    }
-    
-    if (logo) {
-      // If it's a Drive URL, try to make it direct
-      if (logo.includes('drive.google.com')) {
-        const idMatch = logo.match(/id=([^&]+)/) || logo.match(/\/d\/([^/]+)/);
-        const id = idMatch ? idMatch[1] : null;
-        if (id) return `https://lh3.googleusercontent.com/d/${id}`;
-      } else if (!logo.startsWith('http') && logo.length > 20) {
-        // Assume it's a raw Google Drive ID
-        return `https://lh3.googleusercontent.com/d/${logo}`;
-      }
-      return logo;
-    }
-    
-    // Fallback to standard NBA logos
-    const nbaTeams: Record<string, string> = {
-      'Lakers': '1610612747',
-      'Celtics': '1610612738',
-      'Warriors': '1610612744',
-      'Bulls': '1610612741',
-      'Heat': '1610612748',
-      'Knicks': '1610612752',
-      'Nets': '1610612751',
-      'Bucks': '1610612749',
-      'Suns': '1610612756',
-      '76ers': '1610612755',
-      'Mavericks': '1610612742',
-      'Nuggets': '1610612743',
-      'Clippers': '1610612746',
-      'Grizzlies': '1610612763',
-      'Timberwolves': '1610612750',
-      'Pelicans': '1610612740',
-      'Hawks': '1610612737',
-      'Hornets': '1610612766',
-      'Cavaliers': '1610612739',
-      'Pistons': '1610612765',
-      'Pacers': '1610612754',
-      'Magic': '1610612753',
-      'Raptors': '1610612761',
-      'Wizards': '1610612764',
-      'Rockets': '1610612745',
-      'Spurs': '1610612759',
-      'Thunder': '1610612760',
-      'Jazz': '1610612762',
-      'Kings': '1610612758',
-      'Trail Blazers': '1610612757'
-    };
-    
-    const teamKey = Object.keys(nbaTeams).find(key => normalizedName.includes(key.toLowerCase()));
-    if (teamKey) {
-      return `https://cdn.nba.com/logos/nba/${nbaTeams[teamKey]}/global/L/logo.svg`;
-    }
-    
-    return null;
-  };
-
-  const getPlayerImage = (playerName: string | null) => {
-    if (!playerName) return null;
-    const normalizedName = playerName.trim().toLowerCase();
-    
-    // 1. Try exact match (case-insensitive)
-    const exactMatch = Object.keys(playerImages).find(k => k.toLowerCase() === normalizedName);
-    let logo = exactMatch ? playerImages[exactMatch] : null;
-    
-    // 2. Try partial match if no exact match
-    if (!logo) {
-      const partialMatch = Object.keys(playerImages).find(k => 
-        normalizedName.includes(k.toLowerCase()) || k.toLowerCase().includes(normalizedName)
-      );
-      if (partialMatch) logo = playerImages[partialMatch];
-    }
-    
-    if (logo) {
-      // If it's a Drive URL, try to make it direct
-      if (logo.includes('drive.google.com')) {
-        const idMatch = logo.match(/id=([^&]+)/) || logo.match(/\/d\/([^/]+)/);
-        const id = idMatch ? idMatch[1] : null;
-        if (id) return `https://lh3.googleusercontent.com/d/${id}`;
-      } else if (!logo.startsWith('http') && logo.length > 20) {
-        // Assume it's a raw Google Drive ID
-        return `https://lh3.googleusercontent.com/d/${logo}`;
-      }
-      return logo;
-    }
-    
-    return null;
-  };
-
-  const PlayerImage = ({ name, size = 'sm' }: { name: string, size?: 'xs' | 'sm' | 'md' | 'lg' }) => {
-    const [error, setImgError] = useState(false);
-    const imageUrl = getPlayerImage(name);
-    
-    const sizeClasses = {
-      xs: 'w-8 h-8 text-[10px]',
-      sm: 'w-8 h-8 text-xs',
-      md: 'w-16 h-16 md:w-24 md:h-24 text-2xl',
-      lg: 'w-16 h-16 md:w-24 md:h-24 text-2xl'
-    };
-
-    if (!imageUrl || error) {
-      return (
-        <div className={`${sizeClasses[size]} rounded-full border border-[#141414] bg-[#141414] text-[#E4E3E0] flex items-center justify-center font-serif italic font-bold shrink-0`}>
-          {name.charAt(0).toUpperCase()}
-        </div>
-      );
-    }
-
-    return (
-      <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-[#141414] bg-white flex items-center justify-center shrink-0`}>
-        <img 
-          src={imageUrl} 
-          alt={name} 
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-          onError={() => setImgError(true)}
-        />
-      </div>
-    );
-  };
-
-  const TeamLogo = ({ name, size = 'md', noBackground = false }: { name: string, size?: 'xs' | 'sm' | 'md' | 'lg', noBackground?: boolean }) => {
-    const [error, setImgError] = useState(false);
-    const logoUrl = getTeamLogo(name);
-    
-    const sizeClasses = {
-      xs: 'w-8 h-8 text-[10px]',
-      sm: 'w-8 h-8 text-xs',
-      md: 'w-16 h-16 md:w-24 md:h-24 text-2xl',
-      lg: 'w-16 h-16 md:w-24 md:h-24 text-2xl'
-    };
-
-    if (!logoUrl || error) {
-      return (
-        <div className={`${sizeClasses[size]} rounded-full border border-[#141414] bg-[#141414] text-[#E4E3E0] flex items-center justify-center font-serif italic font-bold shrink-0`}>
-          {name.charAt(0).toUpperCase()}
-        </div>
-      );
-    }
-
-    if (noBackground) {
-      return (
-        <div className={`${sizeClasses[size]} flex items-center justify-center shrink-0`}>
-          <img 
-            src={logoUrl} 
-            alt={name} 
-            className="w-full h-full object-contain"
-            referrerPolicy="no-referrer"
-            onError={() => setImgError(true)}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-[#141414] bg-white flex items-center justify-center shrink-0`}>
-        <img 
-          src={logoUrl} 
-          alt={name} 
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-          onError={() => setImgError(true)}
-        />
-      </div>
-    );
-  };
 
   const handleRowClick = (row: Record<string, { v: any; f?: string }>) => {
     if (!isDetailView && salarios) {
@@ -475,18 +297,18 @@ export default function App() {
       return (
         <div className="border border-[#141414] p-8 flex flex-col items-center text-center max-w-2xl mx-auto bg-white/50 backdrop-blur-sm mb-8">
           <ArrowRightLeft className="w-12 h-12 mb-4 opacity-40" />
-          <h2 className="text-2xl font-serif italic mb-2">Trade Simulator</h2>
+          <h2 className="text-2xl font-serif italic mb-2">Simulador de traspasos</h2>
           <p className="opacity-70 mb-6">
             {!tradeTeamA 
-              ? "Select the first team from the list below to start a trade." 
-              : `Selected: ${tradeTeamA}. Now select the second team.`}
+              ? "Elige el primer equipo de la lista para empezar un traspaso." 
+              : `Seleccionado: ${tradeTeamA}. Ahora elige el segundo equipo.`}
           </p>
           {tradeTeamA && (
             <button 
               onClick={() => { setTradeTeamA(null); setTradeTeamB(null); }}
               className="text-[10px] font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity"
             >
-              Reset Selection
+              Reiniciar selección
             </button>
           )}
         </div>
@@ -539,7 +361,7 @@ export default function App() {
     const newCapB = initialCapB - tradedSalaryB + tradedSalaryA;
 
     const formatCurrency = (val: number) => {
-      return new Intl.NumberFormat('de-DE', { 
+      return new Intl.NumberFormat('es-ES', { 
         minimumFractionDigits: 0, 
         maximumFractionDigits: 2 
       }).format(val);
@@ -563,17 +385,17 @@ export default function App() {
           <div className="flex items-center gap-4">
             <TeamLogo name={tradeTeamA} size="sm" />
             <div>
-              <div className="text-xs font-mono uppercase opacity-50">Team A</div>
+              <div className="text-xs font-mono uppercase opacity-50">Equipo A</div>
               <div className="font-serif italic text-xl">{tradeTeamA}</div>
             </div>
           </div>
           <div className="flex flex-col items-center gap-1">
             <ArrowRightLeft className="w-6 h-6 opacity-50" />
-            <div className="text-[10px] font-mono uppercase tracking-widest">Trade Machine</div>
+            <div className="text-[10px] font-mono uppercase tracking-widest">Traspaso</div>
           </div>
           <div className="flex items-center gap-4 text-right">
             <div>
-              <div className="text-xs font-mono uppercase opacity-50">Team B</div>
+              <div className="text-xs font-mono uppercase opacity-50">Equipo B</div>
               <div className="font-serif italic text-xl">{tradeTeamB}</div>
             </div>
             <TeamLogo name={tradeTeamB} size="sm" />
@@ -584,8 +406,8 @@ export default function App() {
           {/* Team A Roster */}
           <div className="border border-[#141414] bg-white/30">
             <div className="p-4 border-b border-[#141414] bg-[#141414]/5 flex justify-between items-center">
-              <span className="font-mono text-xs uppercase tracking-widest">Roster</span>
-              <span className="font-mono text-xs uppercase tracking-widest opacity-50">{rosterA.length} Players</span>
+              <span className="font-mono text-xs uppercase tracking-widest">Plantilla</span>
+              <span className="font-mono text-xs uppercase tracking-widest opacity-50">{rosterA.length} jugadores</span>
             </div>
             <div className="max-h-[400px] overflow-y-auto">
               {rosterA.map((row, i) => {
@@ -615,8 +437,8 @@ export default function App() {
           {/* Team B Roster */}
           <div className="border border-[#141414] bg-white/30">
             <div className="p-4 border-b border-[#141414] bg-[#141414]/5 flex justify-between items-center">
-              <span className="font-mono text-xs uppercase tracking-widest">Roster</span>
-              <span className="font-mono text-xs uppercase tracking-widest opacity-50">{rosterB.length} Players</span>
+              <span className="font-mono text-xs uppercase tracking-widest">Plantilla</span>
+              <span className="font-mono text-xs uppercase tracking-widest opacity-50">{rosterB.length} jugadores</span>
             </div>
             <div className="max-h-[400px] overflow-y-auto">
               {rosterB.map((row, i) => {
@@ -648,29 +470,29 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-[#141414] pt-8">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Team A Summary</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Resumen Equipo A</div>
               <div className="font-serif italic text-lg leading-tight">{tradeTeamA}</div>
             </div>
             {topeSalarialA > 0 && (
               <div className="bg-[#141414]/5 p-3 flex justify-between items-center rounded-sm border border-[#141414]/10">
-                <span className="text-[10px] font-mono uppercase tracking-widest opacity-60">Salary Cap Limit</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest opacity-60">Tope salarial</span>
                 <span className="font-mono font-medium">{formatCurrency(topeSalarialA)}</span>
               </div>
             )}
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2">
-              <span className="text-sm opacity-70">Current Cap</span>
+              <span className="text-sm opacity-70">Gastado actual</span>
               <span className="font-mono">{formatCurrency(initialCapA)}</span>
             </div>
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-red-600">
-              <span className="text-sm">Outgoing Salary</span>
+              <span className="text-sm">Salario saliente</span>
               <span className="font-mono">-{formatCurrency(tradedSalaryA)}</span>
             </div>
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-green-600">
-              <span className="text-sm">Incoming Salary</span>
+              <span className="text-sm">Salario entrante</span>
               <span className="font-mono">+{formatCurrency(tradedSalaryB)}</span>
             </div>
             <div className="flex justify-between items-end pt-2">
-              <span className="font-serif italic text-lg">New Cap</span>
+              <span className="font-serif italic text-lg">Nuevo gastado</span>
               <div className="flex items-center gap-2">
                 {topeSalarialA > 0 && newCapA > topeSalarialA && (
                   <AlertCircle className="w-5 h-5 text-red-600 animate-pulse" />
@@ -684,29 +506,29 @@ export default function App() {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Team B Summary</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Resumen Equipo B</div>
               <div className="font-serif italic text-lg leading-tight">{tradeTeamB}</div>
             </div>
             {topeSalarialB > 0 && (
               <div className="bg-[#141414]/5 p-3 flex justify-between items-center rounded-sm border border-[#141414]/10">
-                <span className="text-[10px] font-mono uppercase tracking-widest opacity-60">Salary Cap Limit</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest opacity-60">Tope salarial</span>
                 <span className="font-mono font-medium">{formatCurrency(topeSalarialB)}</span>
               </div>
             )}
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2">
-              <span className="text-sm opacity-70">Current Cap</span>
+              <span className="text-sm opacity-70">Gastado actual</span>
               <span className="font-mono">{formatCurrency(initialCapB)}</span>
             </div>
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-red-600">
-              <span className="text-sm">Outgoing Salary</span>
+              <span className="text-sm">Salario saliente</span>
               <span className="font-mono">-{formatCurrency(tradedSalaryB)}</span>
             </div>
             <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-green-600">
-              <span className="text-sm">Incoming Salary</span>
+              <span className="text-sm">Salario entrante</span>
               <span className="font-mono">+{formatCurrency(tradedSalaryA)}</span>
             </div>
             <div className="flex justify-between items-end pt-2">
-              <span className="font-serif italic text-lg">New Cap</span>
+              <span className="font-serif italic text-lg">Nuevo gastado</span>
               <div className="flex items-center gap-2">
                 <span className={`font-mono text-xl ${newCapB > (topeSalarialB || initialCapB) ? 'text-red-600' : 'text-green-600'}`}>
                   {formatCurrency(newCapB)}
@@ -729,13 +551,13 @@ export default function App() {
             }}
             className="border border-[#141414] px-6 py-2 font-mono text-xs uppercase tracking-widest hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors"
           >
-            Reset Trade
+            Reiniciar traspaso
           </button>
           <button 
             onClick={() => setCurrentView('salarios')}
             className="bg-[#141414] text-[#E4E3E0] px-6 py-2 font-mono text-xs uppercase tracking-widest hover:opacity-80 transition-opacity"
           >
-            Exit Simulator
+            Salir del simulador
           </button>
         </div>
       </div>
@@ -744,7 +566,7 @@ export default function App() {
 
   const renderLottery = () => {
     if (currentView !== 'lottery') return null;
-    if (!lottery) return <div className="p-10 text-center opacity-50 font-serif italic">No Lottery data found.</div>;
+    if (!lottery) return <div className="p-10 text-center opacity-50 font-serif italic">No se encontraron datos de la Lottery.</div>;
     
     return (
       <div className="overflow-x-auto border border-[#141414]">
@@ -786,7 +608,7 @@ export default function App() {
 
   const renderDraft2026 = () => {
     if (currentView !== 'draft2026') return null;
-    if (!draft2026) return <div className="p-10 text-center opacity-50 font-serif italic">No DRAFT 2026 data found.</div>;
+    if (!draft2026) return <div className="p-10 text-center opacity-50 font-serif italic">No se encontraron datos del DRAFT 2026.</div>;
     
     // Hide empty columns
     const draft2026Headers = draft2026.headers.filter(h => h.trim() !== '');
@@ -831,7 +653,7 @@ export default function App() {
 
   const renderRondas = () => {
     if (currentView !== 'rondas') return null;
-    if (!rondas) return <div className="p-10 text-center opacity-50 font-serif italic">No RONDAS data found.</div>;
+    if (!rondas) return <div className="p-10 text-center opacity-50 font-serif italic">No se encontraron datos de RONDAS.</div>;
     
     // Hide empty columns
     const rondasHeaders = rondas.headers.filter(h => h.trim() !== '');
@@ -900,7 +722,7 @@ export default function App() {
     });
 
     if (results.length === 0) {
-      return <div className="text-sm opacity-50 italic text-center py-4">No players found.</div>;
+      return <div className="text-sm opacity-50 italic text-center py-4">No se encontraron jugadores.</div>;
     }
 
     return results.map((row, i) => {
@@ -953,7 +775,7 @@ export default function App() {
             className="mb-6 flex items-center gap-2 text-sm font-mono uppercase tracking-wider hover:opacity-70 transition-opacity"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Teams
+            Volver a los equipos
           </button>
         )}
         <div className="overflow-x-auto border border-[#141414]">
@@ -1044,7 +866,7 @@ export default function App() {
               {filteredRows.length === 0 && (
                 <tr>
                   <td colSpan={headersToDisplay.length} className="p-10 text-center opacity-50 font-serif italic">
-                    No data found.
+                    Sin datos.
                   </td>
                 </tr>
               )}
@@ -1056,124 +878,126 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#141414] selection:text-[#E4E3E0]">
-      {/* Sidebar Overlay */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#141414]/20 backdrop-blur-sm z-40"
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <motion.div 
-              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-              className="fixed top-0 right-0 bottom-0 w-80 bg-[#E4E3E0] border-l border-[#141414] z-50 flex flex-col"
-            >
-              <div className="p-6 border-b border-[#141414] flex justify-between items-center">
-                <span className="font-serif italic text-xl">Menu</span>
-                <button onClick={() => setIsMenuOpen(false)} className="hover:opacity-70"><X className="w-6 h-6" /></button>
-              </div>
-              <div className="p-6 flex flex-col gap-6 flex-grow overflow-hidden">
-                <div className="relative shrink-0">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
-                  <input 
-                    type="text" 
-                    placeholder="Search player..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-transparent border border-[#141414] py-2 pl-10 pr-4 focus:outline-none focus:bg-[#141414] focus:text-[#E4E3E0] transition-colors placeholder:text-[#141414]/30"
-                  />
+    <ImageContext.Provider value={imageMaps}>
+      <div className="min-h-screen bg-[#E4E3E0] text-[#141414] font-sans selection:bg-[#141414] selection:text-[#E4E3E0]">
+        {/* Sidebar Overlay */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-[#141414]/20 backdrop-blur-sm z-40"
+                onClick={() => setIsMenuOpen(false)}
+              />
+              <motion.div 
+                initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+                className="fixed top-0 right-0 bottom-0 w-80 bg-[#E4E3E0] border-l border-[#141414] z-50 flex flex-col"
+              >
+                <div className="p-6 border-b border-[#141414] flex justify-between items-center">
+                  <span className="font-serif italic text-xl">Menú</span>
+                  <button onClick={() => setIsMenuOpen(false)} className="hover:opacity-70"><X className="w-6 h-6" /></button>
                 </div>
-                {searchTerm ? (
-                  <div className="flex flex-col gap-3 overflow-y-auto flex-grow pr-2">
-                    {renderSearchResults()}
+                <div className="p-6 flex flex-col gap-6 flex-grow overflow-hidden">
+                  <div className="relative shrink-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar jugador..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-transparent border border-[#141414] py-2 pl-10 pr-4 focus:outline-none focus:bg-[#141414] focus:text-[#E4E3E0] transition-colors placeholder:text-[#141414]/30"
+                    />
                   </div>
-                ) : (
-                  <nav className="flex flex-col gap-2 shrink-0">
-                    <button onClick={() => { setCurrentView('salarios'); setSelectedTeam(null); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'salarios' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Salarios & Equipos</button>
-                    <button onClick={() => { setCurrentView('lottery'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'lottery' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Lottery 2026</button>
-                    <button onClick={() => { setCurrentView('draft2026'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'draft2026' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>DRAFT 2026</button>
-                    <button onClick={() => { setCurrentView('rondas'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'rondas' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>RONDAS</button>
-                    <button onClick={() => { setCurrentView('trade'); setSelectedTeam(null); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'trade' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Trade Machine</button>
-                  </nav>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                  {searchTerm ? (
+                    <div className="flex flex-col gap-3 overflow-y-auto flex-grow pr-2">
+                      {renderSearchResults()}
+                    </div>
+                  ) : (
+                    <nav className="flex flex-col gap-2 shrink-0">
+                      <button onClick={() => { setCurrentView('salarios'); setSelectedTeam(null); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'salarios' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Salarios & Equipos</button>
+                      <button onClick={() => { setCurrentView('lottery'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'lottery' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Lottery 2026</button>
+                      <button onClick={() => { setCurrentView('draft2026'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'draft2026' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>DRAFT 2026</button>
+                      <button onClick={() => { setCurrentView('rondas'); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'rondas' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>RONDAS</button>
+                      <button onClick={() => { setCurrentView('trade'); setSelectedTeam(null); setIsMenuOpen(false); }} className={`text-left px-4 py-3 font-mono uppercase tracking-widest text-sm border border-[#141414] transition-colors ${currentView === 'trade' ? 'bg-[#141414] text-[#E4E3E0]' : 'hover:bg-[#141414]/10'}`}>Simulador de traspasos</button>
+                    </nav>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
-      {/* Header */}
-      <header className="border-b border-[#141414] p-6 md:p-10 flex flex-col gap-8">
-        <div className="flex justify-between items-center gap-6">
-          <button 
-            onClick={() => {
-              setCurrentView('salarios');
-              setSelectedTeam(null);
-              setSearchTerm('');
-            }}
-            className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
-          >
-            <TeamLogo name="AsturFantasy NBA" size="xs" noBackground />
-            <span className="text-[11px] font-mono uppercase tracking-widest opacity-50 italic">AsturFantasy NBA</span>
-          </button>
-          
-          <div className="flex items-center gap-4">
+        {/* Header */}
+        <header className="border-b border-[#141414] p-6 md:p-10 flex flex-col gap-8">
+          <div className="flex justify-between items-center gap-6">
             <button 
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center gap-2 border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors disabled:opacity-50"
+              onClick={() => {
+                setCurrentView('salarios');
+                setSelectedTeam(null);
+                setSearchTerm('');
+              }}
+              className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="text-sm font-mono uppercase tracking-wider hidden sm:inline">Sync</span>
+              <TeamLogo name="AsturFantasy NBA" size="xs" noBackground />
+              <span className="text-[11px] font-mono uppercase tracking-widest opacity-50 italic">AsturFantasy NBA</span>
             </button>
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 border border-[#141414] hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors">
-              <Menu className="w-5 h-5" />
-            </button>
+          
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={loadData}
+                disabled={loading}
+                className="flex items-center gap-2 border border-[#141414] px-4 py-2 hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-sm font-mono uppercase tracking-wider hidden sm:inline">Actualizar</span>
+              </button>
+              <button onClick={() => setIsMenuOpen(true)} className="p-2 border border-[#141414] hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors">
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-6">
-          {currentView === 'salarios' && isDetailView && <TeamLogo name={selectedTeam!} size="lg" />}
-          <h1 className="text-4xl md:text-6xl font-serif italic tracking-tight leading-none">
-            {currentView === 'trade' ? 'Trade Simulator' : 
-             currentView === 'lottery' ? 'Lottery 2026' : 
-             currentView === 'draft2026' ? 'DRAFT 2026' : 
-             currentView === 'rondas' ? 'RONDAS' : 
-             (isDetailView ? selectedTeam : 'Salarios Equipos')}
-          </h1>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="p-6 md:p-10">
-        {error ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="border border-[#141414] p-8 flex flex-col items-center text-center max-w-2xl mx-auto"
-          >
-            <AlertCircle className="w-12 h-12 mb-4 text-red-600" />
-            <h2 className="text-2xl font-serif italic mb-2">Sync Connection Failed</h2>
-            <p className="opacity-70 mb-6">{error}</p>
-          </motion.div>
-        ) : loading && !salarios && !lottery && !draft2026 && !rondas ? (
-          <div className="flex flex-col items-center justify-center py-20 opacity-30">
-            <RefreshCw className="w-12 h-12 animate-spin mb-4" />
-            <p className="font-mono uppercase tracking-widest text-sm">Loading Sheet Data...</p>
+          <div className="flex items-center gap-6">
+            {currentView === 'salarios' && isDetailView && <TeamLogo name={selectedTeam!} size="lg" />}
+            <h1 className="text-4xl md:text-6xl font-serif italic tracking-tight leading-none">
+              {currentView === 'trade' ? 'Simulador de traspasos' : 
+               currentView === 'lottery' ? 'Lottery 2026' : 
+               currentView === 'draft2026' ? 'DRAFT 2026' : 
+               currentView === 'rondas' ? 'RONDAS' : 
+               (isDetailView ? selectedTeam : 'Salarios Equipos')}
+            </h1>
           </div>
-        ) : (
-          <>
-            {currentView === 'trade' && renderTradeMachine()}
-            {currentView === 'lottery' && renderLottery()}
-            {currentView === 'draft2026' && renderDraft2026()}
-            {currentView === 'rondas' && renderRondas()}
-            {(currentView === 'salarios' || (currentView === 'trade' && (!tradeTeamA || !tradeTeamB))) && renderMainTable()}
-          </>
-        )}
-      </main>
-    </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="p-6 md:p-10">
+          {error ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border border-[#141414] p-8 flex flex-col items-center text-center max-w-2xl mx-auto"
+            >
+              <AlertCircle className="w-12 h-12 mb-4 text-red-600" />
+              <h2 className="text-2xl font-serif italic mb-2">Error al conectar con la hoja</h2>
+              <p className="opacity-70 mb-6">{error}</p>
+            </motion.div>
+          ) : loading && !salarios && !lottery && !draft2026 && !rondas ? (
+            <div className="flex flex-col items-center justify-center py-20 opacity-30">
+              <RefreshCw className="w-12 h-12 animate-spin mb-4" />
+              <p className="font-mono uppercase tracking-widest text-sm">Cargando datos...</p>
+            </div>
+          ) : (
+            <>
+              {currentView === 'trade' && renderTradeMachine()}
+              {currentView === 'lottery' && renderLottery()}
+              {currentView === 'draft2026' && renderDraft2026()}
+              {currentView === 'rondas' && renderRondas()}
+              {(currentView === 'salarios' || (currentView === 'trade' && (!tradeTeamA || !tradeTeamB))) && renderMainTable()}
+            </>
+          )}
+        </main>
+      </div>
+    </ImageContext.Provider>
   );
 }
