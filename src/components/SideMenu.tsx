@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { DRAFT_LABEL, LOTTERY_LABEL } from '../config';
 import { ParsedSheet, View } from '../types';
 import { displayValue, getContractColumn, getContractStyle, getPlayerColumn, getTeamColumn } from '../utils/sheet';
 import { PlayerImage, TeamLogo } from './Images';
@@ -7,8 +8,8 @@ import { PlayerImage, TeamLogo } from './Images';
 const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'salarios', label: 'Salarios & Equipos' },
   { view: 'trade', label: 'Simulador de traspasos' },
-  { view: 'lottery', label: 'Lottery 2026' },
-  { view: 'draft2026', label: 'DRAFT 2026' },
+  { view: 'lottery', label: LOTTERY_LABEL },
+  { view: 'draft2026', label: DRAFT_LABEL },
   { view: 'derechos', label: 'Derechos' },
   { view: 'rondas', label: 'RONDAS' }
 ];

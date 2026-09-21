@@ -1,16 +1,17 @@
 import { SheetData, ParsedSheet } from '../types';
+import { SHEET_ID, TabRef } from '../config';
 
-const SHEET_ID = '1awwvd85-BLPT45034PjeVLNThIGdDF10XQBtKDBEEXw';
-
-export async function fetchSheet(sheetName: string): Promise<ParsedSheet> {
+export async function fetchSheet(tab: TabRef): Promise<ParsedSheet> {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+    // Mit gid (falls in config.ts gesetzt) ist der Tab-Name egal, sonst wird der Name verwendet.
+    const tabQuery = tab.gid ? `gid=${encodeURIComponent(tab.gid)}` : `sheet=${encodeURIComponent(tab.name)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&${tabQuery}`;
     const response = await fetch(url);
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         throw new Error('La hoja de Google no es pública. Activa "Cualquier persona con el enlace puede ver" en la configuración de compartir.');
       }
-      throw new Error(`No se pudo cargar la hoja ${sheetName}: ${response.statusText}`);
+      throw new Error(`No se pudo cargar la hoja ${tab.name}: ${response.statusText}`);
     }
 
     const text = await response.text();
@@ -19,7 +20,7 @@ export async function fetchSheet(sheetName: string): Promise<ParsedSheet> {
 
     return parseGenericSheet(data.table);
   } catch (error) {
-    console.error(`Error fetching sheet ${sheetName}:`, error);
+    console.error(`Error fetching sheet ${tab.name}:`, error);
     throw error;
   }
 }

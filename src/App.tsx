@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { RefreshCw, AlertCircle, Menu } from 'lucide-react';
 import { motion } from 'motion/react';
 import { fetchSheet } from './services/googleSheetService';
+import { DRAFT_LABEL, LOTTERY_LABEL, TABS } from './config';
 import { ParsedSheet, Row, View } from './types';
 import { buildImageMaps } from './utils/imageMaps';
 import { getTeamColumn } from './utils/sheet';
@@ -37,22 +38,22 @@ export default function App() {
     setError(null);
     try {
       const [salariosData, equiposData, logosData, lotteryData, draft2026Data, rondasData] = await Promise.all([
-        fetchSheet('SALARIOS EQUIPOS'),
-        fetchSheet('EQUIPOS'),
-        fetchSheet('LOGOS').catch((err) => {
-          console.warn('LOGOS sheet fetch failed:', err);
+        fetchSheet(TABS.salarios),
+        fetchSheet(TABS.equipos),
+        fetchSheet(TABS.logos).catch((err) => {
+          console.warn(`${TABS.logos.name} sheet fetch failed:`, err);
           return null;
         }),
-        fetchSheet('Lottery 2026').catch((err) => {
-          console.warn('Lottery 2026 sheet fetch failed:', err);
+        fetchSheet(TABS.lottery).catch((err) => {
+          console.warn(`${TABS.lottery.name} sheet fetch failed:`, err);
           return null;
         }),
-        fetchSheet('DRAFT 2026').catch((err) => {
-          console.warn('DRAFT 2026 sheet fetch failed:', err);
+        fetchSheet(TABS.draft).catch((err) => {
+          console.warn(`${TABS.draft.name} sheet fetch failed:`, err);
           return null;
         }),
-        fetchSheet('RONDAS').catch((err) => {
-          console.warn('RONDAS sheet fetch failed:', err);
+        fetchSheet(TABS.rondas).catch((err) => {
+          console.warn(`${TABS.rondas.name} sheet fetch failed:`, err);
           return null;
         })
       ]);
@@ -117,8 +118,8 @@ export default function App() {
 
   const title =
     currentView === 'trade' ? 'Simulador de traspasos' :
-    currentView === 'lottery' ? 'Lottery 2026' :
-    currentView === 'draft2026' ? 'DRAFT 2026' :
+    currentView === 'lottery' ? LOTTERY_LABEL :
+    currentView === 'draft2026' ? DRAFT_LABEL :
     currentView === 'rondas' ? 'RONDAS' :
     currentView === 'derechos' ? 'Derechos' :
     (isDetailView ? selectedTeam : 'Salarios Equipos');
@@ -212,7 +213,7 @@ export default function App() {
                 <SheetTable sheet={lottery} emptyText="No se encontraron datos de la Lottery." />
               )}
               {currentView === 'draft2026' && (
-                <SheetTable sheet={draft2026} emptyText="No se encontraron datos del DRAFT 2026." hideEmptyHeaders />
+                <SheetTable sheet={draft2026} emptyText={`No se encontraron datos del ${DRAFT_LABEL}.`} hideEmptyHeaders />
               )}
               {currentView === 'rondas' && (
                 <SheetTable sheet={rondas} emptyText="No se encontraron datos de RONDAS." hideEmptyHeaders highlightTradedPicks />
