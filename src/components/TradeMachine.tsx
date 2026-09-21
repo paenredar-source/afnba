@@ -29,9 +29,9 @@ interface TradeMachineProps {
 export function TradeMachine({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: TradeMachineProps) {
   if (!teamA || !teamB) {
     return (
-      <div className="border border-[#141414] p-8 flex flex-col items-center text-center max-w-2xl mx-auto bg-white/50 backdrop-blur-sm mb-8">
+      <div className="border border-line p-8 flex flex-col items-center text-center max-w-2xl mx-auto bg-surface/70 mb-8">
         <ArrowRightLeft className="w-12 h-12 mb-4 opacity-40" />
-        <h2 className="text-2xl font-serif italic mb-2">Simulador de traspasos</h2>
+        <h2 className="t-sec text-3xl mb-2">Simulador de traspasos</h2>
         <p className="opacity-70 mb-6">
           {!teamA
             ? 'Elige el primer equipo de la lista para empezar un traspaso.'
@@ -40,7 +40,7 @@ export function TradeMachine({ equipos, salarios, teamA, teamB, onResetTeams, on
         {teamA && (
           <button
             onClick={onResetTeams}
-            className="text-[10px] font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity"
+            className="t-label hover:opacity-100 transition-opacity"
           >
             Reiniciar selección
           </button>
@@ -214,10 +214,10 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
     const selectedIcon = team === 'A' ? 'text-blue-600' : 'text-orange-600';
 
     return (
-      <div className="border border-[#141414] bg-white/30">
-        <div className="p-4 border-b border-[#141414] bg-[#141414]/5 flex justify-between items-center">
-          <span className="font-mono text-xs uppercase tracking-widest">Plantilla</span>
-          <span className="font-mono text-xs uppercase tracking-widest opacity-50">{roster.length} jugadores</span>
+      <div className="border border-line bg-surface/50">
+        <div className="p-4 border-b border-line bg-ink/5 flex justify-between items-center">
+          <span className="t-label">Plantilla</span>
+          <span className="t-label">{roster.length} jugadores</span>
         </div>
         <div className="max-h-[400px] overflow-y-auto">
           {roster.map((row, i) => {
@@ -230,16 +230,16 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
               <div
                 key={i}
                 onClick={() => togglePlayer(name, team)}
-                className={`p-3 border-b border-[#141414]/10 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? selectedBg : 'hover:bg-[#141414]/5'}`}
+                className={`p-3 border-b border-line flex items-center justify-between cursor-pointer transition-colors ${isSelected ? selectedBg : 'hover:bg-ink/5'}`}
               >
                 <div className="flex items-center gap-3">
                   <PlayerImage name={name} size="sm" />
                   <div>
                     <div className="text-sm font-medium">{name}</div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono opacity-50">{formatNumber(salary)}</span>
+                      <span className="text-xs tabular-nums opacity-60">{formatNumber(salary)}</span>
                       {contractStyle && (
-                        <span className={`px-1.5 rounded-full text-[8px] font-mono uppercase tracking-wider border ${contractStyle}`}>
+                        <span className={`px-1.5 pill text-[11px] font-semibold uppercase tracking-wide border ${contractStyle}`}>
                           {contract}
                         </span>
                       )}
@@ -258,32 +258,32 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
   const renderSummary = (team: string, label: string, initialCap: number, outgoing: number, incoming: number, newCap: number, tope: number, newFree: number | null, over: number) => (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col">
-        <div className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-50">Resumen {label}</div>
-        <div className="font-serif italic text-lg leading-tight">{team}</div>
+        <div className="t-label">Resumen {label}</div>
+        <div className="t-team text-lg leading-tight">{team}</div>
       </div>
       {tope > 0 && (
-        <div className="bg-[#141414]/5 p-3 flex justify-between items-center rounded-sm border border-[#141414]/10">
-          <span className="text-[10px] font-mono uppercase tracking-widest opacity-60">Tope salarial</span>
-          <span className="font-mono font-medium">{formatNumber(tope)}</span>
+        <div className="bg-ink/5 p-3 flex justify-between items-center rounded-sm border border-line">
+          <span className="t-label">Tope salarial</span>
+          <span className="tabular-nums font-semibold">{formatNumber(tope)}</span>
         </div>
       )}
-      <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2">
+      <div className="flex justify-between items-end border-b border-line pb-2">
         <span className="text-sm opacity-70">Gastado actual</span>
-        <span className="font-mono">{formatNumber(initialCap)}</span>
+        <span className="tabular-nums">{formatNumber(initialCap)}</span>
       </div>
-      <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-red-600">
+      <div className="flex justify-between items-end border-b border-line pb-2 text-bad">
         <span className="text-sm">Salario saliente</span>
-        <span className="font-mono">-{formatNumber(outgoing)}</span>
+        <span className="tabular-nums">-{formatNumber(outgoing)}</span>
       </div>
-      <div className="flex justify-between items-end border-b border-[#141414]/10 pb-2 text-green-600">
+      <div className="flex justify-between items-end border-b border-line pb-2 text-good">
         <span className="text-sm">Salario entrante</span>
-        <span className="font-mono">+{formatNumber(incoming)}</span>
+        <span className="tabular-nums">+{formatNumber(incoming)}</span>
       </div>
       <div className="flex justify-between items-end pt-2">
-        <span className="font-serif italic text-lg">Nuevo gastado</span>
+        <span className="t-team text-lg">Nuevo gastado</span>
         <div className="flex items-center gap-2">
-          {over > 0 && <AlertCircle className="w-5 h-5 text-red-600 animate-pulse" />}
-          <span className={`font-mono text-xl ${newCap > (tope || initialCap) ? 'text-red-600' : 'text-green-600'}`}>
+          {over > 0 && <AlertCircle className="w-5 h-5 text-bad animate-pulse" />}
+          <span className={`tabular-nums text-xl ${newCap > (tope || initialCap) ? 'text-bad' : 'text-good'}`}>
             {formatNumber(newCap)}
           </span>
         </div>
@@ -291,7 +291,7 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
       {newFree !== null && (
         <div className="flex justify-between items-end">
           <span className="text-sm opacity-70">{over > 0 ? 'Supera el tope en' : 'Cap libre tras el traspaso'}</span>
-          <span className={`font-mono ${over > 0 ? 'text-red-600 font-medium' : ''}`}>
+          <span className={`tabular-nums ${over > 0 ? 'text-bad font-medium' : ''}`}>
             {formatNumber(over > 0 ? over : newFree)}
           </span>
         </div>
@@ -301,22 +301,22 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex justify-between items-center bg-[#141414] text-[#E4E3E0] p-4 rounded-sm">
+      <div className="flex justify-between items-center bg-ink text-paper p-4 rounded-sm">
         <div className="flex items-center gap-4">
           <TeamLogo name={teamA} size="sm" />
           <div>
-            <div className="text-xs font-mono uppercase opacity-50">Equipo A</div>
-            <div className="font-serif italic text-xl">{teamA}</div>
+            <div className="t-label">Equipo A</div>
+            <div className="t-team text-xl">{teamA}</div>
           </div>
         </div>
         <div className="flex flex-col items-center gap-1">
           <ArrowRightLeft className="w-6 h-6 opacity-50" />
-          <div className="text-[10px] font-mono uppercase tracking-widest">Traspaso</div>
+          <div className="t-label">Traspaso</div>
         </div>
         <div className="flex items-center gap-4 text-right">
           <div>
-            <div className="text-xs font-mono uppercase opacity-50">Equipo B</div>
-            <div className="font-serif italic text-xl">{teamB}</div>
+            <div className="t-label">Equipo B</div>
+            <div className="t-team text-xl">{teamB}</div>
           </div>
           <TeamLogo name={teamB} size="sm" />
         </div>
@@ -325,7 +325,7 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
       {/* Ergebnis auf einen Blick, damit man es sieht, waehrend man Spieler auswaehlt */}
       {hasSelection && (newFreeA !== null || newFreeB !== null) && (
         overA > 0 || overB > 0 ? (
-          <div className="flex items-start gap-3 border border-red-600 bg-red-600/10 text-red-700 p-4 rounded-sm">
+          <div className="flex items-start gap-3 border border-bad bg-bad/10 text-bad p-4 rounded-sm">
             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
             <div className="text-sm">
               {overA > 0 && <div><span className="font-medium">{teamA}</span> supera el tope salarial en {formatNumber(overA)}.</div>}
@@ -333,7 +333,7 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3 border border-green-600 bg-green-600/10 text-green-700 p-4 rounded-sm">
+          <div className="flex items-center gap-3 border border-good bg-good/10 text-good p-4 rounded-sm">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <div className="text-sm">Ambos equipos quedan dentro del tope salarial.</div>
           </div>
@@ -346,37 +346,37 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
       </div>
 
       {/* Trade Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-[#141414] pt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-line pt-8">
         {renderSummary(teamA, 'Equipo A', initialCapA, tradedSalaryA, tradedSalaryB, newCapA, topeA, newFreeA, overA)}
         {renderSummary(teamB, 'Equipo B', initialCapB, tradedSalaryB, tradedSalaryA, newCapB, topeB, newFreeB, overB)}
       </div>
 
       {futureRows.length > 0 && (
-        <div className="border border-[#141414] bg-white/30">
-          <div className="p-4 border-b border-[#141414] bg-[#141414]/5">
-            <div className="font-mono text-xs uppercase tracking-widest">Contratos en próximas temporadas</div>
+        <div className="border border-line bg-surface/50">
+          <div className="p-4 border-b border-line bg-ink/5">
+            <div className="t-label">Contratos en próximas temporadas</div>
             <div className="text-[11px] opacity-60 mt-1">Cambio por temporada según las columnas de años (entrante − saliente). Positivo = el equipo se compromete a más dinero.</div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-[#141414]/10">
-                  <th className="p-3 text-left font-mono uppercase tracking-wider text-[11px] opacity-70"></th>
+                <tr className="border-b border-line">
+                  <th className="p-3 text-left t-th"></th>
                   {futureRows.map(y => (
-                    <th key={y.col} className="p-3 text-right font-mono uppercase tracking-wider text-[11px] opacity-70 whitespace-nowrap">{y.col}</th>
+                    <th key={y.col} className="p-3 text-right t-th whitespace-nowrap">{y.col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {[{ team: teamA, sign: 1 }, { team: teamB, sign: -1 }].map(({ team, sign }) => (
-                  <tr key={team} className="border-b border-[#141414]/10">
+                  <tr key={team} className="border-b border-line">
                     <td className="p-3 font-medium whitespace-nowrap">{team}</td>
                     {futureRows.map(y => {
                       const delta = y.deltaA * sign;
                       return (
                         <td
                           key={y.col}
-                          className={`p-3 text-right font-mono ${delta > 0 ? 'text-red-600' : delta < 0 ? 'text-green-600' : 'opacity-60'}`}
+                          className={`p-3 text-right tabular-nums ${delta > 0 ? 'text-bad' : delta < 0 ? 'text-good' : 'opacity-60'}`}
                         >
                           {formatSigned(delta)}
                         </td>
@@ -393,21 +393,21 @@ function TradeBoard({ equipos, salarios, teamA, teamB, onResetTeams, onExit }: T
       <div className="flex flex-wrap justify-center gap-4 mt-4">
         <button
           onClick={onResetTeams}
-          className="border border-[#141414] px-6 py-2 font-mono text-xs uppercase tracking-widest hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors"
+          className="border border-ink px-6 py-2 t-btn pill hover:bg-ink hover:text-paper transition-colors"
         >
           Reiniciar traspaso
         </button>
         <button
           onClick={handleCopy}
           disabled={!hasSelection}
-          className="border border-[#141414] px-6 py-2 font-mono text-xs uppercase tracking-widest hover:bg-[#141414] hover:text-[#E4E3E0] transition-colors disabled:opacity-30 disabled:pointer-events-none flex items-center gap-2"
+          className="border border-accent bg-accent text-on-accent px-6 py-2 t-btn pill hover:opacity-90 transition-opacity disabled:opacity-30 disabled:pointer-events-none flex items-center gap-2"
         >
           <Copy className="w-3.5 h-3.5" />
           {copyState === 'ok' ? '¡Copiado!' : copyState === 'error' ? 'No se pudo copiar' : 'Copiar resumen'}
         </button>
         <button
           onClick={onExit}
-          className="bg-[#141414] text-[#E4E3E0] px-6 py-2 font-mono text-xs uppercase tracking-widest hover:opacity-80 transition-opacity"
+          className="bg-ink text-paper px-6 py-2 t-btn pill hover:opacity-80 transition-opacity"
         >
           Salir del simulador
         </button>

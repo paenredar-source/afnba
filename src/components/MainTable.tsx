@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { ArrowDown, ArrowLeft, ArrowUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Cell, ParsedSheet, Row } from '../types';
@@ -44,10 +44,13 @@ const compareCells = (a: Cell | undefined, b: Cell | undefined, dir: 'asc' | 'de
 
 /** Farbe je nach freiem Cap (tope = 0, wenn unbekannt). Rot ab 0 abwaerts: kein Platz mehr unter dem Tope. */
 const capTone = (free: number, tope: number) => {
-  if (Math.round(free * 100) / 100 <= 0) return { text: 'text-red-600', bar: 'bg-red-600' };
-  if (tope > 0 && free / tope < 0.05) return { text: 'text-amber-600', bar: 'bg-amber-500' };
-  return { text: 'text-green-600', bar: 'bg-green-600' };
+  if (Math.round(free * 100) / 100 <= 0) return { text: 'text-bad', bar: 'bg-bad', css: 'var(--color-bad)' };
+  if (tope > 0 && free / tope < 0.05) return { text: 'text-warn', bar: 'bg-warn', css: 'var(--color-warn)' };
+  return { text: 'text-good', bar: 'bg-good', css: 'var(--color-good)' };
 };
+
+/** Spalten mit Zahlen: rechtsbuendig */
+const isNumericHeader = (h: string) => isYearHeader(h) || /libre|tope|gastado|bono|salario|extra|anual/i.test(h);
 
 interface MainTableProps {
   /** SALARIOS EQUIPOS (Uebersicht) oder EQUIPOS (Teamansicht) */
@@ -152,52 +155,61 @@ export function MainTable({
   }, [isDetailView, salarios, selectedTeam]);
 
   const yearHeaders = headers.filter(isYearHeader);
+  const capStripTone = teamCap ? capTone(teamCap.free, teamCap.tope) : null;
 
   return (
     <>
       {isDetailView && (
         <button
           onClick={onBack}
-          className="mb-6 flex items-center gap-2 text-sm font-mono uppercase tracking-wider hover:opacity-70 transition-opacity"
+          className="mb-6 flex items-center gap-2 t-btn hover:opacity-70 transition-opacity"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver a los equipos
         </button>
       )}
 
-      {teamCap && (
-        <div className="mb-6 border border-[#141414] p-4 bg-white/30 flex flex-col gap-3">
-          <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-xs uppercase tracking-widest">
-            <span className="opacity-60">Gastado <span className="text-base normal-case tracking-normal opacity-100 ml-1">{formatNumber(teamCap.spent)}</span></span>
-            <span className="opacity-60">Tope <span className="text-base normal-case tracking-normal opacity-100 ml-1">{formatNumber(teamCap.tope)}</span></span>
-            <span className="opacity-60">Libre <span className={`text-base normal-case tracking-normal ml-1 font-medium ${capTone(teamCap.free, teamCap.tope).text}`}>{formatNumber(teamCap.free)}</span></span>
+      {teamCap && capStripTone && (
+        <div className="mb-6 py-4 border-y border-line grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-x-6 gap-y-3">
+          <div>
+            <span className="t-label block mb-0.5">Gastado</span>
+            <span className="t-num text-3xl leading-none tabular-nums">{formatNumber(teamCap.spent)}</span>
           </div>
-          <div className="h-1.5 bg-[#141414]/10">
+          <div>
+            <span className="t-label block mb-0.5">Tope</span>
+            <span className="t-num text-3xl leading-none tabular-nums">{formatNumber(teamCap.tope)}</span>
+          </div>
+          <div>
+            <span className="t-label block mb-0.5">Libre</span>
+            <span className={`t-num text-3xl leading-none tabular-nums ${capStripTone.text}`}>{formatNumber(teamCap.free)}</span>
+          </div>
+          <div className="bar-track col-span-full">
             <div
-              className={`h-full ${capTone(teamCap.free, teamCap.tope).bar}`}
+              className={`bar-fill ${capStripTone.bar}`}
               style={{ width: `${Math.max(0, Math.min(100, (teamCap.spent / teamCap.tope) * 100))}%` }}
             />
           </div>
         </div>
       )}
 
-      <div className="overflow-x-auto border border-[#141414]">
-        <table className="w-full border-collapse text-sm">
+      <div className="tbl">
+        <table className="w-full border-collapse text-[15px]">
           <thead>
-            <tr className="border-b border-[#141414] bg-[#141414]/5">
+            <tr>
               {headers.map((header, i) => {
                 const active = sort?.header === header;
+                const numeric = isNumericHeader(header) && header !== contractCol;
                 return (
                   <th
                     key={i}
                     aria-sort={active ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                    className="p-3 text-left font-mono uppercase tracking-wider text-[11px] opacity-70 whitespace-nowrap"
+                    className={`p-3 t-th whitespace-nowrap ${numeric ? 'text-right' : 'text-left'} ${i === 0 ? 'sticky left-0 z-[1] bg-paper' : ''}`}
                   >
                     <button
                       type="button"
                       onClick={() => toggleSort(header)}
                       title="Ordenar"
-                      className={`inline-flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:opacity-70 ${active ? 'font-bold' : ''}`}
+                      className={`inline-flex items-center gap-1 cursor-pointer hover:opacity-70 ${active ? 'text-ink font-bold' : ''}`}
                     >
                       {header}
                       {active && (sort!.dir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
@@ -228,6 +240,13 @@ export function MainTable({
                   lastTwoYearCols = filled.slice(-2);
                 }
 
+                // Cap-Status der Zeile (Uebersicht): Farbe fuer den Streifen links (Schrift "Marcador")
+                let rowTone: ReturnType<typeof capTone> | null = null;
+                if (!isDetailView && freeHeader) {
+                  const f = cellNumber(row[freeHeader]);
+                  if (f !== null) rowTone = capTone(f, topeCol ? parseSalary(row[topeCol]?.v) : 0);
+                }
+
                 return (
                   <motion.tr
                     key={id}
@@ -237,20 +256,28 @@ export function MainTable({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     onClick={() => onRowClick(row)}
-                    className={`border-b border-[#141414]/10 transition-colors ${
+                    className={`group border-b border-line transition-colors ${
                       isSelectedInTrade
-                        ? 'bg-[#141414] text-[#E4E3E0]'
+                        ? 'bg-accent text-on-accent'
                         : !isDetailView
-                          ? 'cursor-pointer hover:bg-[#141414] hover:text-[#E4E3E0]'
-                          : 'hover:bg-[#141414]/5'
+                          ? 'cursor-pointer hover:bg-hover'
+                          : 'hover:bg-hover'
                     }`}
                   >
                     {headers.map((header, colIndex) => {
                       const isTeamCol = !isDetailView && header === teamCol;
                       const isPlayerCol = isDetailView && header === playerCol;
+                      const isNameCol = isTeamCol || isPlayerCol;
                       const isContractCol = header === contractCol;
                       const isBonoCol = header.toLowerCase().includes('bono');
                       const isHighlightedYear = lastTwoYearCols.includes(header);
+                      const numeric = isNumericHeader(header) && !isNameCol && !isContractCol;
+
+                      const stickyClass =
+                        colIndex === 0
+                          ? `sticky left-0 z-[1] ${isSelectedInTrade ? 'bg-accent' : 'bg-paper group-hover:bg-hover'}`
+                          : '';
+                      const tdClass = `p-3 whitespace-nowrap ${numeric ? 'text-right tabular-nums' : ''} ${stickyClass}`;
 
                       if (freeHeader && header === freeHeader && !isDetailView) {
                         const free = cellNumber(row[freeHeader]);
@@ -259,13 +286,13 @@ export function MainTable({
                           const tope = topeCol ? parseSalary(row[topeCol]?.v) : 0;
                           const tone = capTone(free, tope);
                           return (
-                            <td key={colIndex} className="p-3 whitespace-nowrap">
-                              <div className="flex flex-col gap-1 min-w-[6rem]">
-                                <span className={`font-mono font-medium ${tone.text}`}>{displayValue(row[freeHeader])}</span>
+                            <td key={colIndex} className={tdClass}>
+                              <div className="flex flex-col items-end gap-1.5 min-w-[6.5rem]">
+                                <span className={`t-num text-xl leading-none tabular-nums ${isSelectedInTrade ? '' : tone.text}`}>{displayValue(row[freeHeader])}</span>
                                 {tope > 0 && spentCol && (
-                                  <div className="h-1 bg-[#141414]/15">
+                                  <div className="bar-track w-full">
                                     <div
-                                      className={`h-full ${tone.bar}`}
+                                      className={`bar-fill ${isSelectedInTrade ? 'bg-on-accent' : tone.bar}`}
                                       style={{ width: `${Math.max(0, Math.min(100, (spent / tope) * 100))}%` }}
                                     />
                                   </div>
@@ -285,18 +312,25 @@ export function MainTable({
                       }
 
                       const contractStyle = isContractCol ? getContractStyle(value) : null;
+                      const stripe = colIndex === 0 && rowTone;
 
                       return (
-                        <td key={colIndex} className="p-3 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            {isTeamCol && <TeamLogo name={String(row[header]?.v)} size="sm" />}
-                            {isPlayerCol && <PlayerImage name={String(row[header]?.v)} size="sm" />}
-                            {isContractCol && contractStyle ? (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border ${contractStyle}`}>
+                        <td
+                          key={colIndex}
+                          className={`${tdClass} ${stripe ? 'stripe' : ''}`}
+                          style={stripe && rowTone ? ({ '--tone': rowTone.css } as CSSProperties) : undefined}
+                        >
+                          <div className={`flex items-center gap-3 ${numeric ? 'justify-end' : ''}`}>
+                            {isTeamCol && <span className="logo-slot"><TeamLogo name={String(row[header]?.v)} size="sm" /></span>}
+                            {isPlayerCol && <span className="logo-slot"><PlayerImage name={String(row[header]?.v)} size="sm" /></span>}
+                            {isNameCol ? (
+                              <span className="name t-team text-[17px]">{value}</span>
+                            ) : isContractCol && contractStyle ? (
+                              <span className={`px-2 py-0.5 pill text-[11px] font-semibold uppercase tracking-wide border ${contractStyle}`}>
                                 {value}
                               </span>
                             ) : isHighlightedYear ? (
-                              <span className="px-1.5 py-0.5 rounded border border-purple-400 bg-purple-400/10 text-purple-900 font-medium">
+                              <span className="px-1.5 py-0.5 pill border border-accent font-semibold">
                                 {value}
                               </span>
                             ) : (
@@ -312,7 +346,7 @@ export function MainTable({
             </AnimatePresence>
             {items.length === 0 && (
               <tr>
-                <td colSpan={headers.length} className="p-10 text-center opacity-50 font-serif italic">
+                <td colSpan={headers.length} className="p-10 text-center opacity-50">
                   Sin datos.
                 </td>
               </tr>

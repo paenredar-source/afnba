@@ -140,14 +140,14 @@ export const PlayerImage = memo(function PlayerImage({ name, size = 'sm' }: { na
 
   if (!imageUrl || failedUrl === imageUrl) {
     return (
-      <div className={`${sizeClasses[size]} rounded-full border border-[#141414] bg-[#141414] text-[#E4E3E0] flex items-center justify-center font-serif italic font-bold shrink-0`}>
+      <div className={`${sizeClasses[size]} rounded-full border border-ink bg-ink text-paper flex items-center justify-center font-display font-bold shrink-0`}>
         {name.charAt(0).toUpperCase()}
       </div>
     );
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-[#141414] bg-white flex items-center justify-center shrink-0`}>
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-ink bg-white flex items-center justify-center shrink-0`}>
       <img
         src={imageUrl}
         alt={name}
@@ -175,7 +175,7 @@ export const TeamLogo = memo(function TeamLogo({
 
   if (!logoUrl || failedUrl === logoUrl) {
     return (
-      <div className={`${sizeClasses[size]} rounded-full border border-[#141414] bg-[#141414] text-[#E4E3E0] flex items-center justify-center font-serif italic font-bold shrink-0`}>
+      <div className={`${sizeClasses[size]} rounded-full border border-ink bg-ink text-paper flex items-center justify-center font-display font-bold shrink-0`}>
         {name.charAt(0).toUpperCase()}
       </div>
     );
@@ -196,7 +196,7 @@ export const TeamLogo = memo(function TeamLogo({
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-[#141414] bg-white flex items-center justify-center shrink-0`}>
+    <div className={`${sizeClasses[size]} rounded-full overflow-hidden border border-ink bg-white flex items-center justify-center shrink-0`}>
       <img
         src={logoUrl}
         alt={name}
