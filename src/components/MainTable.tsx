@@ -42,9 +42,9 @@ const compareCells = (a: Cell | undefined, b: Cell | undefined, dir: 'asc' | 'de
   return dir === 'asc' ? result : -result;
 };
 
-/** Farbe je nach freiem Cap (tope = 0, wenn unbekannt) */
+/** Farbe je nach freiem Cap (tope = 0, wenn unbekannt). Rot ab 0 abwaerts: kein Platz mehr unter dem Tope. */
 const capTone = (free: number, tope: number) => {
-  if (free < 0) return { text: 'text-red-600', bar: 'bg-red-600' };
+  if (Math.round(free * 100) / 100 <= 0) return { text: 'text-red-600', bar: 'bg-red-600' };
   if (tope > 0 && free / tope < 0.05) return { text: 'text-amber-600', bar: 'bg-amber-500' };
   return { text: 'text-green-600', bar: 'bg-green-600' };
 };

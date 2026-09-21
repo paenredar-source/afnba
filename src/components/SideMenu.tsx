@@ -6,11 +6,11 @@ import { PlayerImage, TeamLogo } from './Images';
 
 const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'salarios', label: 'Salarios & Equipos' },
-  { view: 'derechos', label: 'Derechos' },
+  { view: 'trade', label: 'Simulador de traspasos' },
   { view: 'lottery', label: 'Lottery 2026' },
   { view: 'draft2026', label: 'DRAFT 2026' },
-  { view: 'rondas', label: 'RONDAS' },
-  { view: 'trade', label: 'Simulador de traspasos' }
+  { view: 'derechos', label: 'Derechos' },
+  { view: 'rondas', label: 'RONDAS' }
 ];
 
 interface SideMenuProps {
