@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ParsedSheet } from '../types';
 import {
+  countActiveContracts,
   formatNumber,
   getContractColumn,
   getContractStyle,
@@ -32,13 +33,14 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
     const contractCol = getContractColumn(equipos.headers);
     if (!contractCol) return [];
 
+    const activeCounts = countActiveContracts(equipos);
     const byTeam = new Map<string, { name: string; salary: number; contract: string }[]>();
+
     equipos.rows.forEach(row => {
       const contract = String(row[contractCol]?.v || '').trim();
-      if (!isDerechos(contract)) return;
       const team = String(row[teamCol]?.v || '').trim();
       const name = String(row[playerCol]?.v || '').trim();
-      if (!team || !name) return;
+      if (!isDerechos(contract) || !team || !name) return;
       if (!byTeam.has(team)) byTeam.set(team, []);
       byTeam.get(team)!.push({ name, salary: parseSalary(row[salaryCol || '']?.v), contract });
     });
@@ -46,7 +48,8 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
     return Array.from(byTeam.entries()).map(([team, players]) => ({
       team,
       players,
-      total: players.reduce((sum, p) => sum + p.salary, 0)
+      total: players.reduce((sum, p) => sum + p.salary, 0),
+      active: activeCounts.get(team) || 0
     }));
   }, [equipos]);
 
@@ -64,7 +67,6 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
 
   const visible = teamFilter ? groups.filter(g => g.team === teamFilter) : groups;
   const totalPlayers = visible.reduce((sum, g) => sum + g.players.length, 0);
-  const totalSalary = visible.reduce((sum, g) => sum + g.total, 0);
 
   return (
     <div className="flex flex-col gap-8">
@@ -96,7 +98,6 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
 
       <div className="flex flex-wrap gap-x-8 gap-y-2 t-label">
         <span>{totalPlayers} jugadores</span>
-        <span>Salario que se libera: {formatNumber(totalSalary)}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -112,7 +113,7 @@ export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
                 <span className="t-team text-lg truncate">{group.team}</span>
               </span>
               <span className="t-label shrink-0">
-                {group.players.length} · {formatNumber(group.total)}
+                {group.active} {group.active === 1 ? 'contrato activo' : 'contratos activos'}
               </span>
             </button>
             <div>

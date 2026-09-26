@@ -106,6 +106,40 @@ export const getContractStyle = (type: string) => {
 export const isDerechos = (contract: string) => contract.toLowerCase().includes('derecho');
 
 /**
+ * Aktive Vertragstypen: zaehlen als laufender Vertrag eines Teams (im Gegensatz zu "Derechos" und "Cut").
+ * "Extension"/"Extensión" gehoert dazu, weil es ein verlaengerter, weiter laufender Vertrag ist.
+ */
+const ACTIVE_CONTRACT_TYPES = ['standard', 'rookie', 'gratis', 'd-league', 'dleague', 'extension', 'extensión'];
+
+export const isActiveContract = (contract: string) => {
+  const c = contract.toLowerCase();
+  return ACTIVE_CONTRACT_TYPES.some(t => c.includes(t));
+};
+
+/**
+ * Zahl der aktiven Vertraege je Team im Tab "EQUIPOS". Leere "Gratis"-Reservezeilen ohne Spielername
+ * (fuer die naechste Saison vorgesehen) zaehlen nicht mit.
+ */
+export const countActiveContracts = (equipos: ParsedSheet): Map<string, number> => {
+  const teamCol = getTeamColumn(equipos.headers);
+  const playerCol = getPlayerColumn(equipos.headers);
+  const contractCol = getContractColumn(equipos.headers);
+  const counts = new Map<string, number>();
+  if (!contractCol) return counts;
+
+  equipos.rows.forEach(row => {
+    const team = String(row[teamCol]?.v || '').trim();
+    const name = String(row[playerCol]?.v || '').trim();
+    const contract = String(row[contractCol]?.v || '').trim();
+    if (!team || !name) return;
+    if (isActiveContract(contract)) {
+      counts.set(team, (counts.get(team) || 0) + 1);
+    }
+  });
+  return counts;
+};
+
+/**
  * Welche Spalten werden angezeigt?
  * - Uebersicht ("SALARIOS EQUIPOS"): Spalten ohne Ueberschrift sowie "Anual" und "Extra" werden ausgeblendet.
  * - Teamansicht ("EQUIPOS"): "Control", "Anual" und alles ab der Spalte "Imagen" werden ausgeblendet.
