@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ParsedSheet } from '../types';
 import {
+  countActiveContracts,
   formatNumber,
   getContractColumn,
   getContractStyle,
@@ -24,9 +25,6 @@ interface DerechosViewProps {
 export function DerechosView({ equipos, onSelectTeam }: DerechosViewProps) {
   const [teamFilter, setTeamFilter] = useState<string | null>(null);
 
-// Aktive Vertragstypen: zaehlen als laufender Vertrag eines Teams (im Gegensatz zu "Derechos" und "Cut")
-const ACTIVE_TYPES = ['standard', 'rookie', 'gratis', 'd-league', 'dleague'];
-
   const groups = useMemo(() => {
     if (!equipos) return [];
     const teamCol = getTeamColumn(equipos.headers);
@@ -35,22 +33,14 @@ const ACTIVE_TYPES = ['standard', 'rookie', 'gratis', 'd-league', 'dleague'];
     const contractCol = getContractColumn(equipos.headers);
     if (!contractCol) return [];
 
+    const activeCounts = countActiveContracts(equipos);
     const byTeam = new Map<string, { name: string; salary: number; contract: string }[]>();
-    const activeCounts = new Map<string, number>();
 
     equipos.rows.forEach(row => {
       const contract = String(row[contractCol]?.v || '').trim();
       const team = String(row[teamCol]?.v || '').trim();
       const name = String(row[playerCol]?.v || '').trim();
-      if (!team) return;
-
-      // Aktive Vertraege: Standard, Rookie, Gratis, D-League. Leere "Gratis"-Reservezeilen ohne Spieler zaehlen nicht.
-      const contractLower = contract.toLowerCase();
-      if (name && ACTIVE_TYPES.some(t => contractLower.includes(t))) {
-        activeCounts.set(team, (activeCounts.get(team) || 0) + 1);
-      }
-
-      if (!isDerechos(contract) || !name) return;
+      if (!isDerechos(contract) || !team || !name) return;
       if (!byTeam.has(team)) byTeam.set(team, []);
       byTeam.get(team)!.push({ name, salary: parseSalary(row[salaryCol || '']?.v), contract });
     });

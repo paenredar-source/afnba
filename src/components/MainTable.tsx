@@ -5,6 +5,7 @@ import { Cell, ParsedSheet, Row } from '../types';
 import {
   displayValue,
   cellNumber,
+  countActiveContracts,
   formatNumber,
   getCapColumns,
   getContractColumn,
@@ -139,6 +140,12 @@ export function MainTable({
     });
   };
 
+  // Zahl der aktiven Vertraege des Teams (Standard, Rookie, Gratis, D-League, Extension), fuer die Teamansicht
+  const activeContracts = useMemo(() => {
+    if (!isDetailView || !selectedTeam) return null;
+    return countActiveContracts(sheet).get(selectedTeam) ?? 0;
+  }, [isDetailView, selectedTeam, sheet]);
+
   // --- Cap-Leiste in der Teamansicht ---
   const teamCap = useMemo(() => {
     if (!isDetailView || !salarios) return null;
@@ -183,12 +190,24 @@ export function MainTable({
             <span className="t-label block mb-0.5">Libre</span>
             <span className={`t-num text-3xl leading-none tabular-nums ${capStripTone.text}`}>{formatNumber(teamCap.free)}</span>
           </div>
+          {activeContracts !== null && (
+            <div>
+              <span className="t-label block mb-0.5">Contratos activos</span>
+              <span className="t-num text-3xl leading-none tabular-nums">{activeContracts}</span>
+            </div>
+          )}
           <div className="bar-track col-span-full">
             <div
               className={`bar-fill ${capStripTone.bar}`}
               style={{ width: `${Math.max(0, Math.min(100, (teamCap.spent / teamCap.tope) * 100))}%` }}
             />
           </div>
+        </div>
+      )}
+      {!teamCap && activeContracts !== null && (
+        <div className="mb-6 py-4 border-y border-line">
+          <span className="t-label block mb-0.5">Contratos activos</span>
+          <span className="t-num text-3xl leading-none tabular-nums">{activeContracts}</span>
         </div>
       )}
 
