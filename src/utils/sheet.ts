@@ -105,6 +105,12 @@ export const getContractStyle = (type: string) => {
 /** Ist der Vertrag ein "Derechos"-Vertrag (Vertrag laeuft aus, Team hat zuerst die Rechte)? */
 export const isDerechos = (contract: string) => contract.toLowerCase().includes('derecho');
 
+/** Ist der Vertrag ein "D-League"-Vertrag? (Schreibweisen "D-League" und "DLeague") */
+export const isDLeague = (contract: string) => {
+  const c = contract.toLowerCase();
+  return c.includes('d-league') || c.includes('dleague');
+};
+
 /**
  * Aktive Vertragstypen: zaehlen als laufender Vertrag eines Teams (im Gegensatz zu "Derechos" und "Cut").
  * "Extension"/"Extensión" gehoert dazu, weil es ein verlaengerter, weiter laufender Vertrag ist.
