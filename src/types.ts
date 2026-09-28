@@ -13,4 +13,4 @@ export interface ParsedSheet {
   unlabeled: string[];
 }
 
-export type View = 'salarios' | 'trade' | 'lottery' | 'draft2026' | 'rondas' | 'derechos';
+export type View = 'salarios' | 'trade' | 'lottery' | 'draft2026' | 'rondas' | 'derechos' | 'dleague';

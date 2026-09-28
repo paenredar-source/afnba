@@ -10,6 +10,7 @@ import { ImageContext, TeamLogo } from './components/Images';
 import { MainTable } from './components/MainTable';
 import { TradeMachine } from './components/TradeMachine';
 import { DerechosView } from './components/DerechosView';
+import { DLeagueView } from './components/DLeagueView';
 import { SheetTable } from './components/SheetTable';
 import { SideMenu } from './components/SideMenu';
 
@@ -122,6 +123,7 @@ export default function App() {
     currentView === 'draft2026' ? DRAFT_LABEL :
     currentView === 'rondas' ? 'RONDAS' :
     currentView === 'derechos' ? 'Derechos' :
+    currentView === 'dleague' ? 'D-League' :
     (isDetailView ? selectedTeam : 'Salarios Equipos');
 
   return (
@@ -209,6 +211,7 @@ export default function App() {
                 />
               )}
               {currentView === 'derechos' && <DerechosView equipos={equipos} onSelectTeam={goToTeam} />}
+              {currentView === 'dleague' && <DLeagueView equipos={equipos} onSelectTeam={goToTeam} />}
               {currentView === 'lottery' && (
                 <SheetTable sheet={lottery} emptyText="No se encontraron datos de la Lottery." />
               )}
