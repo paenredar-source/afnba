@@ -53,6 +53,7 @@ Beim Wechsel von `data-type` muss in `index.html` auch die passende Schrift-Zeil
 
 - **Salarios Equipos:** Übersicht aller Teams. Die Spalte `LIBRE` aus dem Sheet wird farbig dargestellt (rot = über dem Tope) und bekommt einen Auslastungsbalken. Gibt es keine `LIBRE`-Spalte, berechnet die App „Cap libre“ selbst (Tope Salarial minus Gastado). Die Spaltenköpfe sind anklickbar zum Sortieren. Klick auf ein Team öffnet die Plantilla, oben mit Gastado / Tope / Libre.
 - **Derechos:** Alle Spieler, bei denen im Tab `EQUIPOS` in der Spalte `Contrato` der Wert `Derechos` steht (Vertrag läuft aus, das Team hat zuerst die Rechte), gruppiert nach Team.
+- **D-League:** Alle Spieler mit `D-League` in `Contrato`, gruppiert nach Team. Es spielt keine Rolle, ob ein Team einen oder zwei hat, die App zeigt alle.
 - **Lottery 2026, DRAFT 2026, RONDAS:** Tabellen aus den gleichnamigen Tabs. Bei RONDAS werden getauschte Picks hervorgehoben.
 - **Simulador de traspasos:** Zwei Teams in der Tabelle anklicken, dann Spieler auswählen. Er zeigt das neue „Gastado“ und den neuen freien Cap (ausgehend von `LIBRE`) und warnt, wenn ein Team über dem Tope landet. Außerdem zeigt er die Änderung der Vertragssummen pro Saison und kopiert eine Zusammenfassung für WhatsApp. Spieler mit `Cut` können nicht getradet werden, `Derechos`-Spieler schon.
 
@@ -63,7 +64,8 @@ Beim Wechsel von `data-type` muss in `index.html` auch die passende Schrift-Zeil
 - `src/App.tsx`: Daten laden, Header und Navigation
 - `src/components/MainTable.tsx`: Tabelle für Salarios Equipos und Teamansicht
 - `src/components/TradeMachine.tsx`: Trade-Simulator
-- `src/components/DerechosView.tsx`: Übersicht der Derechos-Spieler
+- `src/components/ContractGroupView.tsx`: gemeinsame Ansicht für Derechos und D-League
+- `src/components/DerechosView.tsx`, `DLeagueView.tsx`: die beiden Seiten (nur Filter und Texte)
 - `src/components/SheetTable.tsx`: Lottery, Draft und Rondas
 - `src/components/SideMenu.tsx`: Menü und Spielersuche
 - `src/components/Images.tsx`: Team-Logos und Spielerbilder
