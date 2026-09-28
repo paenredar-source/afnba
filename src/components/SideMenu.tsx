@@ -11,6 +11,7 @@ const NAV_ITEMS: { view: View; label: string }[] = [
   { view: 'lottery', label: LOTTERY_LABEL },
   { view: 'draft2026', label: DRAFT_LABEL },
   { view: 'derechos', label: 'Derechos' },
+  { view: 'dleague', label: 'D-League' },
   { view: 'rondas', label: 'RONDAS' }
 ];
 
